@@ -255,4 +255,26 @@ app.post("/setnewpassword", async function (req, res) {
     }
 });
 
+// to get registered user name and count
+
+app.get("/getusersname", async function (req, res) {
+try{
+
+const name = await User.aggregate([
+   {
+        $project: { _id: 0,
+            first_name:1,
+            last_name:1
+        }
+    }
+])
+res.send(name)
+
+}
+catch(err){
+    console.log(err)
+
+}
+})
+
 module.exports = app;
