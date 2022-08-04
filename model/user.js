@@ -7,7 +7,6 @@ const userSchema = new mongoose.Schema({
   password: { type: String },
   token: { type: String },
   random_string:{type:String},
-  url:{type:String}
 });
 
-module.exports = mongoose.model("urlshortuseremail", userSchema);
+module.exports = mongoose.model("markdownviewer", userSchema);

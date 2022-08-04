@@ -2,14 +2,13 @@ const { ObjectId } = require("mongodb")
 const mongo = require("../shared")
 const express = require('express');
 const User = require("../model/user")
-const urldb = require('../model/url')
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 require('dotenv').config()
 var nodemailer = require('nodemailer');
 var randomString = require('random-string')
 const cors = require('cors')
-var shortUrl = require("node-url-shortener")
+
 
 mongo.connect();
 var app = express();
@@ -255,70 +254,5 @@ app.post("/setnewpassword", async function (req, res) {
         console.log(err)
     }
 });
-
-
-// URL shortner 
-
-app.post("/urlshortner", async function (req, res) {
-    try {
-        const { url } = req.body;
-
-        const NoUser = await urldb.findOne({ url });
-
-        shortUrl.short(url, async function (err, urll) {
-            try {
-                const user = await urldb.create({
-                    url: url,
-                    shorturl: urll,
-                });
-
-                res.send(user)
-            }
-            catch (err) {
-                console.log(err)
-            }
-        });
-
-    }
-    catch (err) {
-        console.log(err)
-    }
-});
-
-// to get url count till date
-
-app.get("/gettotalproductcount", async (req, res) => {
-    try {
-        const response = await urldb.aggregate([
-            {
-                $group: {
-                    _id: "$userId",
-                    Totalcount: { "$sum": 1 }
-                }
-            }, {
-                $project: { _id: 0 }
-            }
-        ])
-        res.send(response)
-    }
-    catch (err) {
-        console.log(err)
-    }
-}
-)
-
-// to get all url's created till date
-
-app.get("/getdatas", async (req, res) => {
-    try {
-        const response = await urldb.find()
-        res.send(response)
-    }
-    catch (err) {
-        console.log(err)
-    }
-}
-)
-
 
 module.exports = app;
