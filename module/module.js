@@ -1,12 +1,11 @@
-const { ObjectId } = require("mongodb")
 const mongo = require("../shared")
 const express = require('express');
 const User = require("../model/user")
-const bcrypt = require("bcryptjs")
+const contactus = require('../model/contactus')
+const answerCount = require('../model/answercount')
+const register = require('../model/register')
 const jwt = require("jsonwebtoken")
 require('dotenv').config()
-var nodemailer = require('nodemailer');
-var randomString = require('random-string')
 const cors = require('cors')
 
 
@@ -18,29 +17,26 @@ app.use(cors());
 
 
 // Register
+
 app.post("/register", async (req, res) => {
 
     // Our register logic starts here
     try {
         // Get user input
-        const { firstName, lastName, email, password } = req.body;
+        const { firstName, lastName, email } = req.body;
 
-        const oldUser = await User.findOne({ email });
+        const oldUser = await register.findOne({ email });
 
         if (oldUser) {
             return res.send("User Already Exist. Please Login");
         }
 
-        //Encrypt user password
-        encryptedUserPassword = await bcrypt.hash(password, 10);
-
         // Create user in our database
-        const user = await User.create({
+        const user = await register.create({
             first_name: firstName,
             last_name: lastName,
             email: email.toLowerCase(), // sanitize
-            password: encryptedUserPassword,
-            random_string: "abc"
+
         });
 
         // Create token
@@ -63,36 +59,48 @@ app.post("/register", async (req, res) => {
 });
 
 
+// Get user name
+
+app.post("/getuser", async (req, res) => {
+
+    // Our register logic starts here
+    try {
+        // Get user input
+       
+        const {email} = req.body
+
+        const oldUser = await register.findOne({email});
+
+        if (oldUser) {
+            return res.status(201).json(oldUser);;
+        }
+  
+    } catch (err) {
+        console.log(err);
+    }
+    // Our register logic ends here
+});
+
 // Login
+
 app.post("/login", async (req, res) => {
+
 
     // Our login logic starts here
     try {
         // Get user input
-        const { email, password } = req.body;
+        const { email } = req.body;
+
+        const oldUser = await register.findOne({ email });
 
         // Validate user input
-        if (!(email && password)) {
+        if (!(email)) {
             res.status(400).send("All input is required");
         }
-        // Validate if user exist in our database
-        const user = await User.findOne({ email });
 
-        if (user && (await bcrypt.compare(password, user.password))) {
-            // Create token
-            const token = jwt.sign(
-                { user_id: user._id, email },
-                process.env.TOKEN_KEY,
-                {
-                    expiresIn: "5h",
-                }
-            );
+        if (oldUser) {
 
-            // save user token
-            user.token = token;
-
-            // user
-            return res.send('Loggedin');
+            return res.send(oldUser);
         }
         return res.send('Invalid');
 
@@ -104,177 +112,204 @@ app.post("/login", async (req, res) => {
 });
 
 
-// forgot password
+// to get Quiz Question
 
-app.post("/forgotpass", async function (req, res) {
+app.get("/getQuestion", async function (req, res) {
     try {
-        const { email } = req.body;
 
-        const NoUser = await User.findOne({ email });
+        const name = await User.find({})
 
-        if (!NoUser) {
-            return res.send({ message: 'Sorry Email does not Exist!' });
+        if (name) {
+            res.send(name)
         }
 
-        var x = randomString();
 
-        // Create random string in our database
-        var _id = NoUser._id
-
-
-        const user1 = await User.findByIdAndUpdate({ _id }, { $set: { random_string: x } }, { returnNewDocument: true, new: true })
-
-        // Create token
-        const token = jwt.sign(
-            { user_id: user1._id, email },
-            process.env.TOKEN_KEY,
-            {
-                expiresIn: "1h",
-            }
-        );
-
-        // save user token
-        user1.token = token;
-
-        var transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: 'youremail@gmail.com',
-                pass: 'yourpassword'
-            }
-        });
-
-        var mailOptions = {
-            from: 'youremail@gmail.com',
-            to: 'myfriend@yahoo.com',
-            subject: 'Sending Email using Node.js',
-            html: '<h1>Click the link to reset your password</h1><a href="http://localhost:3000/setnewpassword">Reset Your Password with in one hour</a>'
-        };
-
-        transporter.sendMail(mailOptions, function (error, info) {
-            if (error) {
-                console.log(error);
-            } else {
-                console.log('Email sent: ' + info.response);
-            }
-        });
-        res.send("mail_sent")
     }
     catch (err) {
         console.log(err)
+
     }
+})
 
-});
+// to post new question
 
-
-// verification mail
-
-app.post("/verification", async function (req, res) {
+app.post("/postQuestion", async function (req, res) {
     try {
-        const { email } = req.body;
 
-        const NoUser = await User.findOne({ email });
+        const { Question, option1, option2, option3, Answer } = req.body;
 
-        if (!NoUser) {
-            return res.send({ message: 'Sorry Email does not Exist!' });
+        const name = await User.create({
+            Question: Question,
+            option1: option1,
+            option2: option2,
+            option3: option3,
+            Answer: Answer,
+
+        })
+
+        if (name) {
+            res.send(name)
         }
 
-        var x = randomString();
 
-        // Create random string in our database
-        var _id = NoUser._id
-
-
-        const user1 = await User.findByIdAndUpdate({ _id }, { $set: { random_string: x } }, { returnNewDocument: true, new: true })
-
-        // Create token
-        const token = jwt.sign(
-            { user_id: user1._id, email },
-            process.env.TOKEN_KEY,
-            {
-                expiresIn: "1h",
-            }
-        );
-
-        // save user token
-        user1.token = token;
-
-        var transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: 'youremail@gmail.com',
-                pass: 'yourpassword'
-            }
-        });
-
-        var mailOptions = {
-            from: 'youremail@gmail.com',
-            to: 'myfriend@yahoo.com',
-            subject: 'Sending Email using Node.js',
-            html: '<h1>Click the link to reset your password</h1><a href="http://localhost:3000/setnewpassword">Reset Your Password with in one hour</a>'
-        };
-
-        transporter.sendMail(mailOptions, function (error, info) {
-            if (error) {
-                console.log(error);
-            } else {
-                console.log('Email sent: ' + info.response);
-            }
-        });
-        res.send("mail_sent")
     }
     catch (err) {
         console.log(err)
+
     }
+})
 
-});
+// to update question
 
-
-// set new password 
-
-app.post("/setnewpassword", async function (req, res) {
+app.put("/updateQuestion/:id", async function (req, res) {
     try {
-        const { email, password } = req.body;
 
-        const NoUser = await User.findOne({ email });
 
-        if (!NoUser) {
-            return res.send({ message: 'Sorry Email does not Exist!' });
+        const name = await User.findByIdAndUpdate(req.params.id, req.body)
+
+        if (name) {
+            res.send(name)
         }
 
-        // Create random string in our database
-        var _id = NoUser._id
-        encryptedUserPassword = await bcrypt.hash(password, 10);
-
-        const user1 = await User.findByIdAndUpdate({ _id }, { $set: { password: encryptedUserPassword, random_string: "" } }, { returnNewDocument: true, new: true })
-
-        res.send(user1)
     }
     catch (err) {
         console.log(err)
+
     }
-});
+})
 
-// to get registered user name
+// to delete question
 
-app.get("/getusersname", async function (req, res) {
-try{
+app.delete("/deleteQuestion/:id", async function (req, res) {
+    try {
 
-const name = await User.aggregate([
-   {
-        $project: {
-            first_name:1,
-            last_name:1
+
+        const name = await User.findByIdAndDelete(req.params.id)
+
+        if (name) {
+            res.send(name)
+            return res.send("deleted successfully")
         }
+
+
     }
-])
-res.send(name)
+    catch (err) {
+        console.log(err)
 
-}
-catch(err){
-    console.log(err)
+    }
+})
 
-}
+//to post contact us
+
+app.post("/postcontactus", async function (req, res) {
+    try {
+
+        const { Username, UserContactNo, questionenquiry } = req.body;
+
+        const contact = await contactus.create({
+            Username: Username,
+            UserContactNo: UserContactNo,
+            questionenquiry: questionenquiry,
+
+        })
+
+        if (contact) {
+            res.send(contact)
+        }
+
+
+    }
+    catch (err) {
+        console.log(err)
+
+    }
+})
+
+
+// to get contact us post
+
+app.get("/getcontactus", async function (req, res) {
+    try {
+
+
+        const contact = await contactus.find({})
+
+        if (contact) {
+            res.send(contact)
+        }
+
+
+    }
+    catch (err) {
+        console.log(err)
+
+    }
+})
+
+
+// to delete contact us post
+
+app.delete("/deletecontactus/:id", async function (req, res) {
+    try {
+
+
+        const contact = await contactus.findOneAndDelete(req.params.id)
+
+        if (contact) {
+            res.send(contact)
+        }
+
+    }
+    catch (err) {
+        console.log(err)
+
+    }
+})
+
+
+// to post Answer Count 
+
+app.post("/postAnswerCount", async function (req, res) {
+    try {
+
+        const { correctAnswerCount, questionAnswered } = req.body;
+
+        const name = await answerCount.create({
+            correctAnswerCount: correctAnswerCount,
+            questionAnswered: questionAnswered,
+
+        })
+
+        if (name) {
+            res.send(name)
+        }
+
+
+    }
+    catch (err) {
+        console.log(err)
+
+    }
+})
+
+
+// to get answer count
+
+app.get("/getAnswerCount", async function (req, res) {
+    try {
+
+        const name = await answerCount.find({})
+
+        if (name) {
+            res.send(name)
+        }
+
+
+    }
+    catch (err) {
+        console.log(err)
+
+    }
 })
 
 module.exports = app;

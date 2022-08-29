@@ -1,12 +1,13 @@
 const mongoose = require("mongoose");
 
-const userSchema = new mongoose.Schema({
-  first_name: { type: String, default: null },
-  last_name: { type: String, default: null },
-  email: { type: String, unique: true },
-  password: { type: String },
-  token: { type: String },
-  random_string:{type:String},
+const quizSchema = new mongoose.Schema({
+  Question: { type: String },
+  option1: { type: String },
+  option2: { type: String },
+  option3: { type: String},
+  Answer:{type: String},
+  
+ 
 });
 
-module.exports = mongoose.model("markdownviewer", userSchema);
+module.exports = mongoose.model("quizApp", quizSchema);
