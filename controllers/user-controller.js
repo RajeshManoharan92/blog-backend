@@ -1,4 +1,4 @@
-const User = require("../model/User");
+const User = require("../model/User"); 
 const bcrypt = require("bcryptjs");
 var nodemailer = require('nodemailer');
 var randomString = require('random-string')
