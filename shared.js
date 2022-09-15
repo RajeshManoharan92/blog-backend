@@ -9,7 +9,7 @@ module.exports = {
     async connect() {
         try {
             const response = await Mongoose.connect(process.env.Mongo_URL).then(()=>{
-                console.log("database connected successfully")
+                console.log("Database connected successfully")
             })
            
            

@@ -1,13 +1,27 @@
-const mongoose = require("mongoose");
+const mongoose = require("mongoose") ;
 
-const quizSchema = new mongoose.Schema({
-  Question: { type: String },
-  option1: { type: String },
-  option2: { type: String },
-  option3: { type: String},
-  Answer:{type: String},
-  
- 
+const Schema = mongoose.Schema;
+
+const userSchema = new Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+    minlength: 6,
+  },
+  blogs: [{ type: mongoose.Types.ObjectId, ref: "Blog", required: true }],
+  token: {
+    type: String,
+    required: true,
+  },
 });
-
-module.exports = mongoose.model("quizApp", quizSchema);
+module.exports = mongoose.model("User", userSchema);
+// users
